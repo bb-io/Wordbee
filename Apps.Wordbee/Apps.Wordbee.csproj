@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Product>Wordbee</Product>
-        <Description>Description</Description>
+        <Description>The professional end-to-end translation management system</Description>
         <Version>1.0.0</Version>
         <AssemblyName>Apps.Wordbee</AssemblyName>
     </PropertyGroup>

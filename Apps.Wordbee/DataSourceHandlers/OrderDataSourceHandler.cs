@@ -8,23 +8,24 @@ using RestSharp;
 
 namespace Apps.Wordbee.DataSourceHandlers;
 
-public class ProjectDataSourceHandler : WordbeeInvocable, IAsyncDataSourceHandler
+public class OrderDataSourceHandler : WordbeeInvocable, IAsyncDataSourceHandler
 {
-    public ProjectDataSourceHandler(InvocationContext invocationContext) : base(invocationContext)
+    public OrderDataSourceHandler(InvocationContext invocationContext) : base(invocationContext)
     {
     }
 
     public async Task<Dictionary<string, string>> GetDataAsync(DataSourceContext context,
         CancellationToken cancellationToken)
     {
-        var request = new WordbeeRequest("projects/list", Method.Post, Creds).WithJsonBody(new
+        var request = new WordbeeRequest("orders/list", Method.Post, Creds).WithJsonBody(new
         {
             query = $"{{reference}}.Contains(\"{context.SearchString}\")"
         });
-        var response = await Client.Paginate<ProjectEntity>(request);
+        var response = await Client.Paginate<OrderEntity>(request);
 
         return response
+            .OrderByDescending(x => x.Created)
             .Take(40)
-            .ToDictionary(x => x.Id, x => x.Name);
+            .ToDictionary(x => x.Id, x => x.Reference);
     }
 }

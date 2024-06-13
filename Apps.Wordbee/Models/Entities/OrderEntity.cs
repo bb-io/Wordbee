@@ -2,11 +2,20 @@ using Blackbird.Applications.Sdk.Common;
 
 namespace Apps.Wordbee.Models.Entities;
 
-public class JobEntity
+public class OrderEntity
 {
-    [Display("Job ID")]
+    [Display("Order ID")]
     public string Id { get; set; }
     public string Reference { get; set; }
+    
+    [Display("Created at")]
+    public DateTime Created { get; set; }
+    
+    [Display("Company name")]
+    public string CompanyName { get; set; }
+    
+    [Display("Company ID")]
+    public string CompanyId { get; set; }
     
     [Display("Status")]
     public string Statust { get; set; }

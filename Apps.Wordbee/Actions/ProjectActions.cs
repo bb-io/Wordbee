@@ -19,7 +19,7 @@ public class ProjectActions : WordbeeInvocable
     [Action("Get project", Description = "Get details of a specific project")]
     public Task<ProjectEntity> GetProject([ActionParameter] ProjectRequest project)
     {
-        var request = new WordbeeRequest($"projects/list/items/{project.ProjectId}", Method.Post, Creds);
+        var request = new WordbeeRequest($"projects/list/items/{project.ProjectId}", Method.Get, Creds);
         return Client.ExecuteWithErrorHandling<ProjectEntity>(request);
     }
 }

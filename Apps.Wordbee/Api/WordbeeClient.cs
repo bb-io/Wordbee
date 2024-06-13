@@ -17,7 +17,7 @@ public class WordbeeClient : BlackBirdRestClient
 
     public WordbeeClient(AuthenticationCredentialsProvider[] creds) : base(new()
     {
-        BaseUrl = "https://www.wordbee-translator.com/api".ToUri()
+        BaseUrl = creds.Get(CredsNames.Url).Value.ToUri()
     })
     {
         _creds = creds;
@@ -45,20 +45,18 @@ public class WordbeeClient : BlackBirdRestClient
         return result;
     }
 
-    public override async Task<RestResponse> ExecuteWithErrorHandling(RestRequest request)
+    public async Task SetToken()
     {
         var token = await GetToken();
-
-        this.AddDefaultHeader("X-Auth-Token", token);
-        return await base.ExecuteWithErrorHandling(request);
+        this.AddDefaultHeader("X-Auth-Token", token.Trim('"'));
     }
 
     private async Task<string> GetToken()
     {
-        var request = new RestRequest("https://www.wordbee-translator.com/api/auth/token")
+        var request = new RestRequest("/auth/token", Method.Post)
             .WithJsonBody(new
             {
-                accountId = _creds.Get(CredsNames.AccountId).Value,
+                accountid = _creds.Get(CredsNames.AccountId).Value,
                 key = _creds.Get(CredsNames.ApiKey).Value,
             });
 

@@ -15,8 +15,9 @@ public class ConnectionDefinition : IConnectionDefinition
             ConnectionUsage = ConnectionUsage.Actions,
             ConnectionProperties = new List<ConnectionProperty>
             {
+                new(CredsNames.Url) { DisplayName = "API URL" },
                 new(CredsNames.AccountId) { DisplayName = "Account ID" },
-                new(CredsNames.ApiKey) { DisplayName = "API key", Sensitive = true },
+                new(CredsNames.ApiKey) { DisplayName = "API key", Sensitive = true }
             }
         }
     };

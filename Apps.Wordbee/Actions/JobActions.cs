@@ -19,7 +19,7 @@ public class JobActions : WordbeeInvocable
     [Action("Get job", Description = "Get details of a specific job")]
     public Task<JobEntity> GetJob([ActionParameter] JobRequest project)
     {
-        var request = new WordbeeRequest($"jobs/list/items/{project.JobId}", Method.Post, Creds);
+        var request = new WordbeeRequest($"jobs/list/items/{project.JobId}", Method.Get, Creds);
         return Client.ExecuteWithErrorHandling<JobEntity>(request);
     }
 }

@@ -14,5 +14,6 @@ public class WordbeeInvocable : BaseInvocable
     public WordbeeInvocable(InvocationContext invocationContext) : base(invocationContext)
     {
         Client = new(Creds);
+        Client.SetToken().Wait();
     }
 }
