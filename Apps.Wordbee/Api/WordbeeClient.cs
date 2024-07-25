@@ -17,7 +17,7 @@ public class WordbeeClient : BlackBirdRestClient
 
     public WordbeeClient(AuthenticationCredentialsProvider[] creds) : base(new()
     {
-        BaseUrl = creds.Get(CredsNames.Url).Value.ToUri()
+        BaseUrl = (creds.Get(CredsNames.Url).Value.Trim('/') + "/api").ToUri()
     })
     {
         _creds = creds;

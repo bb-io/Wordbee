@@ -1,18 +1,22 @@
+using System.Net.Mime;
+using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
-using Apps.Wordbee.Invocables;
+using Apps.Wordbee.Models;
 using Apps.Wordbee.Models.Entities;
 using Apps.Wordbee.Models.Request.Project;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Invocation;
+using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using RestSharp;
 
 namespace Apps.Wordbee.Actions;
 
 [ActionList]
-public class ProjectActions : WordbeeInvocable
+public class ProjectActions : WordbeeActions
 {
-    public ProjectActions(InvocationContext invocationContext) : base(invocationContext)
+    public ProjectActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : base(
+        invocationContext, fileManagementClient)
     {
     }
 
@@ -21,5 +25,46 @@ public class ProjectActions : WordbeeInvocable
     {
         var request = new WordbeeRequest($"projects/list/items/{project.ProjectId}", Method.Get, Creds);
         return Client.ExecuteWithErrorHandling<ProjectEntity>(request);
+    }
+
+    [Action("Submit new file", Description = "Add new file to an existing project")]
+    public async Task SubmitFile([ActionParameter] ProjectRequest project, [ActionParameter] FileModel file,
+        [ActionParameter] SubmitNewProjectFileInput input)
+    {
+        var fileResponse = await UploadFile(file.File);
+
+        var request = new WordbeeRequest($"projects/{project.ProjectId}/workflows/new", Method.Put, Creds)
+            .AddJsonBody(new
+            {
+                files = new[]
+                {
+                    new
+                    {
+                        name = fileResponse.Name,
+                        token = fileResponse.Token
+                    }
+                },
+                src = input.SourceLanguage,
+                trgs = input.TargetLanguages,
+                deadline = input.Deadline
+            });
+
+        await Client.ExecuteWithErrorHandling(request);
+    }
+
+    [Action("Download translated file", Description = "Download a translated of the workflow")]
+    public async Task<FileModel> DownloadTranslatedFile([ActionParameter] ProjectRequest project,
+        [ActionParameter] DownloadProjectFileInput input)
+    {
+        var endpoint = $"projects/{project.ProjectId}/workflows/{input.DocumentId}/files/{input.TargetLanguage}/file";
+        var request = new WordbeeRequest(endpoint, Method.Get, Creds);
+
+        var response = await Client.ExecuteWithErrorHandling(request);
+
+        return new()
+        {
+            File = await _fileManagementClient.UploadAsync(new MemoryStream(response.RawBytes),
+                response.ContentType ?? MediaTypeNames.Application.Octet, input.DocumentId)
+        };
     }
 }
