@@ -25,6 +25,6 @@ public class ProjectDataSourceHandler : WordbeeInvocable, IAsyncDataSourceHandle
 
         return response
             .Take(40)
-            .ToDictionary(x => x.Id, x => x.Name);
+            .ToDictionary(x => x.Id, x => x.Reference);
     }
 }

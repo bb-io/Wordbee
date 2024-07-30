@@ -6,6 +6,7 @@ using Blackbird.Applications.Sdk.Utils.Extensions.Sdk;
 using Blackbird.Applications.Sdk.Utils.Extensions.String;
 using Blackbird.Applications.Sdk.Utils.RestSharp;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 
 namespace Apps.Wordbee.Api;
@@ -17,7 +18,7 @@ public class WordbeeClient : BlackBirdRestClient
 
     public WordbeeClient(AuthenticationCredentialsProvider[] creds) : base(new()
     {
-        BaseUrl = (creds.Get(CredsNames.Url).Value.Trim('/') + "/api").ToUri()
+        BaseUrl = creds.Get(CredsNames.Url).Value.ToUri()
     })
     {
         _creds = creds;
@@ -36,6 +37,28 @@ public class WordbeeClient : BlackBirdRestClient
                 .SetQueryParameter("skip", offset.ToString())
                 .SetQueryParameter("take", PaginationLimit.ToString());
             
+            response = await ExecuteWithErrorHandling<PaginationResponse<T>>(request);
+            result.AddRange(response.Rows);
+
+            offset += PaginationLimit;
+        } while (response.Total > result.Count);
+
+        return result;
+    }   
+    
+    public async Task<List<T>> Paginate<T>(RestRequest request, object payload)
+    {
+        var jObjectPayload = JObject.FromObject(payload);
+        var offset = 0;
+
+        var result = new List<T>();
+        PaginationResponse<T> response;
+        do
+        {
+            jObjectPayload["skip"] = offset;
+            jObjectPayload["take"] = PaginationLimit;
+            request.AddBody(jObjectPayload);
+
             response = await ExecuteWithErrorHandling<PaginationResponse<T>>(request);
             result.AddRange(response.Rows);
 

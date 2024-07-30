@@ -1,7 +1,7 @@
 using Apps.Wordbee.Api;
 using Apps.Wordbee.Invocables;
 using Apps.Wordbee.Models.Response;
-using Apps.Wordbee.Models.Response.Files;
+using Apps.Wordbee.Models.Response.File;
 using Blackbird.Applications.Sdk.Common.Files;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;

@@ -3,7 +3,9 @@ using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
 using Apps.Wordbee.Models;
 using Apps.Wordbee.Models.Entities;
+using Apps.Wordbee.Models.Request.Document;
 using Apps.Wordbee.Models.Request.Project;
+using Apps.Wordbee.Models.Response.Project;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Invocation;
@@ -20,6 +22,18 @@ public class ProjectActions : WordbeeActions
     {
     }
 
+    [Action("Search projects", Description = "Search for all projects in the workspace")]
+    public async Task<ListProjectsResponse> SearchProjects()
+    {
+        var request = new WordbeeRequest("projects/list", Method.Post, Creds);
+        var response = await Client.Paginate<ProjectEntity>(request);
+
+        return new()
+        {
+            Projects = response
+        };
+    }
+    
     [Action("Get project", Description = "Get details of a specific project")]
     public Task<ProjectEntity> GetProject([ActionParameter] ProjectRequest project)
     {
@@ -53,10 +67,10 @@ public class ProjectActions : WordbeeActions
     }
 
     [Action("Download translated file", Description = "Download a translated of the workflow")]
-    public async Task<FileModel> DownloadTranslatedFile([ActionParameter] ProjectRequest project,
+    public async Task<FileModel> DownloadTranslatedFile([ActionParameter] ProjectDocumentRequest document,
         [ActionParameter] DownloadProjectFileInput input)
     {
-        var endpoint = $"projects/{project.ProjectId}/workflows/{input.DocumentId}/files/{input.TargetLanguage}/file";
+        var endpoint = $"projects/{document.ProjectId}/workflows/{document.DocumentId}/files/{input.TargetLanguage}/file";
         var request = new WordbeeRequest(endpoint, Method.Get, Creds);
 
         var response = await Client.ExecuteWithErrorHandling(request);
@@ -64,7 +78,7 @@ public class ProjectActions : WordbeeActions
         return new()
         {
             File = await _fileManagementClient.UploadAsync(new MemoryStream(response.RawBytes),
-                response.ContentType ?? MediaTypeNames.Application.Octet, input.DocumentId)
+                response.ContentType ?? MediaTypeNames.Application.Octet, document.DocumentId)
         };
     }
 }

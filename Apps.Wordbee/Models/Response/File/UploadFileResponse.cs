@@ -1,4 +1,4 @@
-namespace Apps.Wordbee.Models.Response.Files;
+namespace Apps.Wordbee.Models.Response.File;
 
 public class UploadFileResponse
 {
