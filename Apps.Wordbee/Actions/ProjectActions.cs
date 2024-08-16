@@ -3,6 +3,7 @@ using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
 using Apps.Wordbee.Models;
 using Apps.Wordbee.Models.Entities;
+using Apps.Wordbee.Models.Request;
 using Apps.Wordbee.Models.Request.Document;
 using Apps.Wordbee.Models.Request.Project;
 using Apps.Wordbee.Models.Response.Project;
@@ -38,28 +39,31 @@ public class ProjectActions : WordbeeActions
     public Task<ProjectEntity> GetProject([ActionParameter] ProjectRequest project)
     {
         var request = new WordbeeRequest($"projects/list/items/{project.ProjectId}", Method.Get, Creds);
+        request.AddHeader("Content-Type", MediaTypeNames.Application.Json);
+
         return Client.ExecuteWithErrorHandling<ProjectEntity>(request);
     }
 
     [Action("Submit new file", Description = "Add new file to an existing project")]
-    public async Task SubmitFile([ActionParameter] ProjectRequest project, [ActionParameter] FileModel file,
-        [ActionParameter] SubmitNewProjectFileInput input)
+    public async Task SubmitFile([ActionParameter] FileModel file,
+        [ActionParameter] SubmitNewProjectFileInput input,
+        [ActionParameter] LanguagesRequest langs)
     {
         var fileResponse = await UploadFile(file.File);
 
-        var request = new WordbeeRequest($"projects/{project.ProjectId}/workflows/new", Method.Put, Creds)
+        var request = new WordbeeRequest($"projects/{langs.ProjectId}/workflows/new", Method.Post, Creds)
             .AddJsonBody(new
             {
                 files = new[]
                 {
                     new
                     {
-                        name = fileResponse.Name,
+                        name = file.File.Name,
                         token = fileResponse.Token
                     }
                 },
-                src = input.SourceLanguage,
-                trgs = input.TargetLanguages,
+                src = langs.SourceLanguage,
+                trgs = langs.TargetLanguages,
                 deadline = input.Deadline
             });
 
@@ -67,10 +71,9 @@ public class ProjectActions : WordbeeActions
     }
 
     [Action("Download translated file", Description = "Download a translated of the workflow")]
-    public async Task<FileModel> DownloadTranslatedFile([ActionParameter] ProjectDocumentRequest document,
-        [ActionParameter] DownloadProjectFileInput input)
+    public async Task<FileModel> DownloadTranslatedFile([ActionParameter] ProjectDocumentRequest document)
     {
-        var endpoint = $"projects/{document.ProjectId}/workflows/{document.DocumentId}/files/{input.TargetLanguage}/file";
+        var endpoint = $"projects/{document.ProjectId}/workflows/{document.DocumentId}/files/{document.TargetLanguage}/file";
         var request = new WordbeeRequest(endpoint, Method.Get, Creds);
 
         var response = await Client.ExecuteWithErrorHandling(request);

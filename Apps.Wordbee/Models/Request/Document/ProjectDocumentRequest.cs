@@ -1,4 +1,5 @@
 using Apps.Wordbee.DataSourceHandlers;
+using Apps.Wordbee.DataSourceHandlers.Language;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Dynamic;
 
@@ -13,4 +14,8 @@ public class ProjectDocumentRequest
     [Display("Document ID")] 
     [DataSource(typeof(ProjectDocumentDataHandler))]
     public string DocumentId { get; set; }
+    
+    [Display("Target language")]
+    [DataSource(typeof(DocumentLanguageDataSourceHandler))]
+    public string TargetLanguage { get; set; }
 }

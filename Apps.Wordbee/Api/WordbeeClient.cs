@@ -57,17 +57,18 @@ public class WordbeeClient : BlackBirdRestClient
         {
             jObjectPayload["skip"] = offset;
             jObjectPayload["take"] = PaginationLimit;
-            request.AddBody(jObjectPayload);
+            var jsonPayload = JsonConvert.SerializeObject(jObjectPayload);
 
+            request.AddJsonBody(jsonPayload, false);
             response = await ExecuteWithErrorHandling<PaginationResponse<T>>(request);
-            result.AddRange(response.Rows);
+            result.AddRange(response.Rows ?? response.Items ?? []);
 
             offset += PaginationLimit;
         } while (response.Total > result.Count);
 
         return result;
     }
-
+    
     public async Task SetToken()
     {
         var token = await GetToken();

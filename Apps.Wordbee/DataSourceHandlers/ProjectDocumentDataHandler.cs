@@ -25,7 +25,7 @@ public class ProjectDocumentDataHandler : WordbeeInvocable, IAsyncDataSourceHand
         if (string.IsNullOrWhiteSpace(_request.ProjectId))
             throw new("You should input Project ID first");
 
-        var request = new WordbeeRequest("resources/documents/list", Method.Post, Creds);
+        var request = new WordbeeRequest("/resources/documents/list", Method.Post, Creds);
         var response = await Client.Paginate<DocumentEntity>(request, new
         {
             scope = new

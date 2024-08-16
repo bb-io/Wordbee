@@ -1,7 +1,15 @@
+using Newtonsoft.Json;
+
 namespace Apps.Wordbee.Models.Entities;
 
 public class LanguageEntity
 {
-    public string Loc { get; set; }
+    [JsonProperty("v")]
+    public string Code { get; set; }
+    
+    [JsonProperty("t")]
     public string Name { get; set; }
+    
+    [JsonProperty("src")]
+    public bool IsSourceLanguage { get; set; }
 }

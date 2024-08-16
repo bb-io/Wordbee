@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Apps.Wordbee.Api;
 using Apps.Wordbee.Invocables;
 using Apps.Wordbee.Models.Entities;
@@ -20,6 +21,8 @@ public class JobActions : WordbeeInvocable
     public Task<JobEntity> GetJob([ActionParameter] JobRequest project)
     {
         var request = new WordbeeRequest($"jobs/list/items/{project.JobId}", Method.Get, Creds);
+        request.AddHeader("Content-Type", MediaTypeNames.Application.Json);
+        
         return Client.ExecuteWithErrorHandling<JobEntity>(request);
     }
 }
