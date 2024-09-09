@@ -26,5 +26,5 @@ public class OrderEntity
     [Display("Target language")]
     public string Trg { get; set; }
     
-    public DateTime Deadline { get; set; }
+    public DateTime? Deadline { get; set; }
 }

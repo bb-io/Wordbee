@@ -24,6 +24,7 @@ public class OrderDataSourceHandler : WordbeeInvocable, IAsyncDataSourceHandler
         var response = await Client.Paginate<OrderEntity>(request);
 
         return response
+            .DistinctBy(x => x.Id)
             .OrderByDescending(x => x.Created)
             .Take(40)
             .ToDictionary(x => x.Id, x => x.Reference);

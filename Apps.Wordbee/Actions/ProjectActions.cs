@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using System.Text;
 using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
 using Apps.Wordbee.Models;
@@ -11,6 +12,7 @@ using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
+using Blackbird.Applications.Sdk.Utils.Extensions.Http;
 using RestSharp;
 
 namespace Apps.Wordbee.Actions;
@@ -24,9 +26,18 @@ public class ProjectActions : WordbeeActions
     }
 
     [Action("Search projects", Description = "Search for all projects in the workspace")]
-    public async Task<ListProjectsResponse> SearchProjects()
+    public async Task<ListProjectsResponse> SearchProjects([ActionParameter] SearchProjectsRequest input)
     {
-        var request = new WordbeeRequest("projects/list", Method.Post, Creds);
+        var query = new StringBuilder();
+
+        if (input.Status != null)
+            query.Append($"{{status}} = {input.Status}");
+
+        var request = new WordbeeRequest("projects/list", Method.Post, Creds)
+            .WithJsonBody(new
+            {
+                query = query.ToString()
+            });
         var response = await Client.Paginate<ProjectEntity>(request);
 
         return new()
@@ -34,7 +45,7 @@ public class ProjectActions : WordbeeActions
             Projects = response
         };
     }
-    
+
     [Action("Get project", Description = "Get details of a specific project")]
     public Task<ProjectEntity> GetProject([ActionParameter] ProjectRequest project)
     {
@@ -73,7 +84,8 @@ public class ProjectActions : WordbeeActions
     [Action("Download translated file", Description = "Download a translated of the workflow")]
     public async Task<FileModel> DownloadTranslatedFile([ActionParameter] ProjectDocumentRequest document)
     {
-        var endpoint = $"projects/{document.ProjectId}/workflows/{document.DocumentId}/files/{document.TargetLanguage}/file";
+        var endpoint =
+            $"projects/{document.ProjectId}/workflows/{document.DocumentId}/files/{document.TargetLanguage}/file";
         var request = new WordbeeRequest(endpoint, Method.Get, Creds);
 
         var response = await Client.ExecuteWithErrorHandling(request);
