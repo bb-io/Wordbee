@@ -8,4 +8,9 @@ public class DocumentEntity
     public string Did { get; set; }
     
     public string Name { get; set; }
+    
+    public bool Exists { get; set; }
+    
+    [Display("Segments count")]
+    public long Segments { get; set; }
 }

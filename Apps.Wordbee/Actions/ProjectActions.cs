@@ -7,12 +7,12 @@ using Apps.Wordbee.Models.Entities;
 using Apps.Wordbee.Models.Request;
 using Apps.Wordbee.Models.Request.Document;
 using Apps.Wordbee.Models.Request.Project;
+using Apps.Wordbee.Models.Response;
 using Apps.Wordbee.Models.Response.Project;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
-using Blackbird.Applications.Sdk.Utils.Extensions.Http;
 using RestSharp;
 
 namespace Apps.Wordbee.Actions;
@@ -33,12 +33,11 @@ public class ProjectActions : WordbeeActions
         if (input.Status != null)
             query.Append($"{{status}} = {input.Status}");
 
-        var request = new WordbeeRequest("projects/list", Method.Post, Creds)
-            .WithJsonBody(new
-            {
-                query = query.ToString()
-            });
-        var response = await Client.Paginate<ProjectEntity>(request);
+        var request = new WordbeeRequest("projects/list", Method.Post, Creds);
+        var response = await Client.Paginate<ProjectEntity>(request, new
+        {
+            query = query.ToString()
+        });
 
         return new()
         {
@@ -56,7 +55,7 @@ public class ProjectActions : WordbeeActions
     }
 
     [Action("Submit new file", Description = "Add new file to an existing project")]
-    public async Task SubmitFile([ActionParameter] FileModel file,
+    public async Task<DocumentEntity> SubmitFile([ActionParameter] FileModel file,
         [ActionParameter] SubmitNewProjectFileInput input,
         [ActionParameter] LanguagesRequest langs)
     {
@@ -70,7 +69,10 @@ public class ProjectActions : WordbeeActions
                     new
                     {
                         name = file.File.Name,
-                        token = fileResponse.Token
+                        token = fileResponse.Token,
+                        disableMt = input.DisableMt ?? false,
+                        reference = input.Reference,
+                        comments = input.Comments
                     }
                 },
                 src = langs.SourceLanguage,
@@ -78,7 +80,20 @@ public class ProjectActions : WordbeeActions
                 deadline = input.Deadline
             });
 
-        await Client.ExecuteWithErrorHandling(request);
+        var response = await Client.ExecuteWithErrorHandling<AsyncOperationResponse>(request);
+        var operationResult = await GetAsyncOperationResult<SubmitFileAsyncOperationResponse>(response.Trm.RequestId);
+
+        return operationResult.Custom.Files.First();
+    }
+
+    [Action("Confirm delivery", Description = "Confirm delivery of a specific document")]
+    public Task<ConfirmDocumentDeliveryResponse> ConfirmDelivery([ActionParameter] ProjectDocumentRequest input)
+    {
+        var endpoint =
+            $"/projects/{input.ProjectId}/workflows/{input.DocumentId}/status/{input.TargetLanguage}/delivery/success";
+        var request = new WordbeeRequest(endpoint, Method.Post, Creds);
+
+        return Client.ExecuteWithErrorHandling<ConfirmDocumentDeliveryResponse>(request);
     }
 
     [Action("Download translated file", Description = "Download a translated of the workflow")]

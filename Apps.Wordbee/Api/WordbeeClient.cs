@@ -13,7 +13,7 @@ namespace Apps.Wordbee.Api;
 
 public class WordbeeClient : BlackBirdRestClient
 {
-    private const int PaginationLimit = 500;
+    private const int PaginationLimit = 200;
     private readonly AuthenticationCredentialsProvider[] _creds;
 
     public WordbeeClient(AuthenticationCredentialsProvider[] creds) : base(new()
@@ -28,7 +28,7 @@ public class WordbeeClient : BlackBirdRestClient
     {
         var baseUrl = request.Resource;
         var offset = 0;
-        
+
         var result = new List<T>();
         PaginationResponse<T> response;
         do
@@ -36,7 +36,7 @@ public class WordbeeClient : BlackBirdRestClient
             request.Resource = baseUrl
                 .SetQueryParameter("skip", offset.ToString())
                 .SetQueryParameter("take", PaginationLimit.ToString());
-            
+
             response = await ExecuteWithErrorHandling<PaginationResponse<T>>(request);
             result.AddRange(response.Rows);
 
@@ -44,8 +44,8 @@ public class WordbeeClient : BlackBirdRestClient
         } while (response.Total > result.Count);
 
         return result;
-    }   
-    
+    }
+
     public async Task<List<T>> Paginate<T>(RestRequest request, object payload)
     {
         var jObjectPayload = JObject.FromObject(payload);
@@ -68,7 +68,7 @@ public class WordbeeClient : BlackBirdRestClient
 
         return result;
     }
-    
+
     public async Task SetToken()
     {
         var token = await GetToken();

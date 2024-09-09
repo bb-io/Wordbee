@@ -1,6 +1,6 @@
 using System.Net.Mime;
+using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
-using Apps.Wordbee.Invocables;
 using Apps.Wordbee.Models;
 using Apps.Wordbee.Models.Entities;
 using Apps.Wordbee.Models.Request.Order;
@@ -10,28 +10,24 @@ using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
-using Blackbird.Applications.Sdk.Utils.Extensions.Http;
 using Newtonsoft.Json;
 using RestSharp;
 
 namespace Apps.Wordbee.Actions;
 
 [ActionList]
-public class OrderActions : WordbeeInvocable
+public class OrderActions : WordbeeActions
 {
-    private readonly IFileManagementClient _fileManagementClient;
-
     public OrderActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : base(
-        invocationContext)
+        invocationContext, fileManagementClient)
     {
-        _fileManagementClient = fileManagementClient;
     }
 
     [Action("Download order files", Description = "Download all order files as ZIP")]
     public async Task<FileEntity> DownloadOrderFiles([ActionParameter] OrderRequest order)
     {
         var request = new WordbeeRequest($"orders/{order.OrderId}/files/all/zip", Method.Post, Creds);
-        var response = await Client.ExecuteWithErrorHandling<AsyncOperationResponse>(request);
+        var response = await Client.ExecuteWithErrorHandling<DownloadOrderFilesOperationResponse>(request);
 
         var requestId = response.Trm.RequestId;
         do
@@ -39,7 +35,7 @@ public class OrderActions : WordbeeInvocable
             await Task.Delay(2000);
 
             request = new WordbeeRequest($"trm/status?requestid={requestId}", Method.Get, Creds);
-            response = await Client.ExecuteWithErrorHandling<AsyncOperationResponse>(request);
+            response = await Client.ExecuteWithErrorHandling<DownloadOrderFilesOperationResponse>(request);
 
             if (response.Trm.Status == "Failed")
                 throw new(response.Trm.StatusInfo);
@@ -59,14 +55,14 @@ public class OrderActions : WordbeeInvocable
     public async Task<ListOrdersResponse> SearchOrders(
         [ActionParameter] SearchOrdersRequest input)
     {
-        var request = new WordbeeRequest("orders/list", Method.Post, Creds).WithJsonBody(new
-        {
-            query = $"{{reference}}.Contains(\"{input.Reference}\")"
-        });
+        var request = new WordbeeRequest("orders/list", Method.Post, Creds);
 
         return new()
         {
-            Orders = await Client.Paginate<OrderEntity>(request)
+            Orders = await Client.Paginate<OrderEntity>(request, new
+            {
+                query = $"{{reference}}.Contains(\"{input.Reference}\")"
+            })
         };
     }
 
@@ -96,19 +92,7 @@ public class OrderActions : WordbeeInvocable
         }));
 
         var response = await Client.ExecuteWithErrorHandling(request);
-
-        var requestId = response.Content;
-        AsyncOperationResponse trmResponse;
-        do
-        {
-            await Task.Delay(2000);
-
-            request = new WordbeeRequest($"trm/status?requestid={requestId}", Method.Get, Creds);
-            trmResponse = await Client.ExecuteWithErrorHandling<AsyncOperationResponse>(request);
-
-            if (trmResponse.Trm.Status == "Failed")
-                throw new(trmResponse.Trm.StatusInfo);
-        } while (trmResponse.Trm.Status != "Finished");
+        var trmResponse = await GetAsyncOperationResult<AsyncOperationResponse>(response.Content);
 
         var orderDetails = trmResponse.Result.Items.First().ToObject<OperationResultResponse<OrderOperationResponse>>();
         var orderId = orderDetails.Result.OrderDetails.OrderSummary.OrderId;

@@ -13,7 +13,8 @@ public class WordbeeActions : WordbeeInvocable
 {
     protected readonly IFileManagementClient _fileManagementClient;
 
-    public WordbeeActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : base(invocationContext)
+    public WordbeeActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : base(
+        invocationContext)
     {
         _fileManagementClient = fileManagementClient;
     }
@@ -21,7 +22,7 @@ public class WordbeeActions : WordbeeInvocable
     protected async Task<UploadFileResponse> UploadFile(FileReference file)
     {
         var fileStream = await _fileManagementClient.DownloadAsync(file);
-        
+
         var request = new WordbeeRequest("media/upload", Method.Post, Creds)
         {
             AlwaysMultipartFormData = true
@@ -30,5 +31,22 @@ public class WordbeeActions : WordbeeInvocable
 
         var response = await Client.ExecuteWithErrorHandling<ResultResponse<UploadFileResponse>>(request);
         return response.Result;
+    }
+
+    protected async Task<T> GetAsyncOperationResult<T>(string requestId) where T : AsyncOperationResponse
+    {
+        T trmResponse;
+        do
+        {
+            await Task.Delay(2000);
+
+            var request = new WordbeeRequest($"trm/status?requestid={requestId}", Method.Get, Creds);
+            trmResponse = await Client.ExecuteWithErrorHandling<T>(request);
+
+            if (trmResponse.Trm.Status == "Failed")
+                throw new(trmResponse.Trm.StatusInfo);
+        } while (trmResponse.Trm.Status != "Finished");
+
+        return trmResponse;
     }
 }
