@@ -45,6 +45,10 @@ Wordbee is a powerful, cloud-based translation management system (TMS) designed 
 -   **Get project** returns details of a specific project.
 -   **Search projects** returns a list of all projects in the workspace using filter criteria.
 
+## Setting up the webhooks
+
+After publishing the bird you will receive a callback URL. Copy it, then go to `Settings`,  scroll to the bottom, then `Developer API Webhooks` -> `Configure` -> `Add new webhook` and select the right webhook type. In the URL field input the URL you copied from blackbird earlier. Blackbird is configured to use the default payloads, so if you change something there, pay attention that webhooks may not work as expected. The only thing here is that you may wrap all Wordbee variables in the payload with quotes, so that webhooks become more stable. After all the settings are filled in, click `Save new`.
+
 ## Events
 
 -   **On order message** triggers when any message is added to the order.
