@@ -29,7 +29,7 @@ public class OrderChangedPayload : WordbeeWebhookPayload
     public string Reference { get; set; }
 
     [Display("Client user ID")]
-    public int? ClientUserId { get; set; } 
+    public string? ClientUserId { get; set; } 
 
     [Display("Project ID")]
     public string ProjectId { get; set; }

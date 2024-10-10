@@ -14,7 +14,7 @@ public class DocumentWorkflowFinishedPayload : WordbeeWebhookPayload
 
     [Display("Document ID")] public string? DocumentId { get; set; }
 
-    [Display("Document Nnme")] public string DocumentName { get; set; }
+    [Display("Document name")] public string DocumentName { get; set; }
 
     [Display("Source locale")] public string SourceLocale { get; set; }
 
