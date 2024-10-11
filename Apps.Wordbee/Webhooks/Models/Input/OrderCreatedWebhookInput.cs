@@ -7,6 +7,7 @@ namespace Apps.Wordbee.Webhooks.Models.Input;
 public class OrderCreatedWebhookInput
 {
     [Display("User ID")]
+    [DataSource(typeof(UserDataHandler))]
     public string? UserId { get; set; }
     
     [Display("Project ID")]

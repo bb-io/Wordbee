@@ -6,7 +6,9 @@ namespace Apps.Wordbee.Webhooks.Models.Input;
 
 public class JobChangedWebhookInput
 {
-    [Display("User ID")] public string? UserId { get; set; }
+    [Display("User ID")]
+    [DataSource(typeof(UserDataHandler))]
+    public string? UserId { get; set; }
 
     [Display("Job ID")]
     [DataSource(typeof(JobDataSourceHandler))]

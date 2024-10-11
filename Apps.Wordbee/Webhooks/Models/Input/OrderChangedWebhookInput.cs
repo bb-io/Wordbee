@@ -11,6 +11,7 @@ public class OrderChangedWebhookInput
     public string? OrderId { get; set; }
     
     [Display("User ID")]
+    [DataSource(typeof(UserDataHandler))]
     public string? UserId { get; set; }
     
     [Display("Project ID")]

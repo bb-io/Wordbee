@@ -1,4 +1,5 @@
 using System.Net;
+using Apps.Wordbee.Models.Request.Document;
 using Apps.Wordbee.Webhooks.Models.Input;
 using Apps.Wordbee.Webhooks.Models.Payload;
 using Blackbird.Applications.Sdk.Common.Webhooks;
@@ -102,11 +103,12 @@ public class WebhookList
 
     [Webhook("On document workflow finished", Description = "On workflow of a specific document is finished")]
     public Task<WebhookResponse<DocumentWorkflowFinishedPayload>> OnDocumentWorkflowFinished(WebhookRequest request,
-        [WebhookParameter] DocumentChangedWebhookInput input)
+        [WebhookParameter] DocumentChangedWebhookInput input,
+        [WebhookParameter] ProjectDocumentOptionalRequest document)
     {
         var data = HandleCallback<DocumentWorkflowFinishedPayload>(request);
 
-        if (input.ProjectId is not null && data.ProjectId != input.ProjectId)
+        if (document.ProjectId is not null && data.ProjectId != document.ProjectId)
             return Task.FromResult(GetPreflightResponse<DocumentWorkflowFinishedPayload>());
 
         if (input.UserId is not null && data.UserId != input.UserId)
@@ -118,7 +120,7 @@ public class WebhookList
         if (input.ClientCompanyId is not null && data.ClientCompanyId != input.ClientCompanyId)
             return Task.FromResult(GetPreflightResponse<DocumentWorkflowFinishedPayload>());
 
-        if (input.DocumentId is not null && data.DocumentId != input.DocumentId)
+        if (document.DocumentId is not null && data.DocumentId != document.DocumentId)
             return Task.FromResult(GetPreflightResponse<DocumentWorkflowFinishedPayload>());
 
         return Task.FromResult(new WebhookResponse<DocumentWorkflowFinishedPayload>()
