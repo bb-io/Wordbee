@@ -16,11 +16,12 @@ public class WebhookList
     {
         var data = HandleCallback<ProjectStatusChangedPayload>(request);
 
-        if (input.ProjectId is not null && data.Id != input.ProjectId)
+        if ((input.ProjectId is not null && data.Id != input.ProjectId)
+         || (input.UserId is not null && data.UserId != input.UserId)
+         || (input.Status.HasValue && data.Status != input.Status.Value))
+        {
             return Task.FromResult(GetPreflightResponse<ProjectStatusChangedPayload>());
-
-        if (input.UserId is not null && data.UserId != input.UserId)
-            return Task.FromResult(GetPreflightResponse<ProjectStatusChangedPayload>());
+        }
 
         return Task.FromResult(new WebhookResponse<ProjectStatusChangedPayload>()
         {
