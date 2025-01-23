@@ -18,5 +18,5 @@ public class ProjectWebhookInput
 
     [Display("Project status")]
     [StaticDataSource(typeof(ProjectStatusStaticHandler))]
-    public int? Status { get; set; }
+    public string? Status { get; set; }
 }
