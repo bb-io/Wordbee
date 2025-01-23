@@ -16,11 +16,12 @@ public class WebhookList
     {
         var data = HandleCallback<ProjectStatusChangedPayload>(request);
 
-        if (input.ProjectId is not null && data.Id != input.ProjectId)
+        if ((input.ProjectId is not null && data.Id != input.ProjectId)
+         || (input.UserId is not null && data.UserId != input.UserId)
+         || (input.Status is not null && data.Status.ToString() != input.Status))
+        {
             return Task.FromResult(GetPreflightResponse<ProjectStatusChangedPayload>());
-
-        if (input.UserId is not null && data.UserId != input.UserId)
-            return Task.FromResult(GetPreflightResponse<ProjectStatusChangedPayload>());
+        }
 
         return Task.FromResult(new WebhookResponse<ProjectStatusChangedPayload>()
         {
@@ -35,18 +36,14 @@ public class WebhookList
     {
         var data = HandleCallback<OrderChangedPayload>(request);
 
-        if (input.ProjectId is not null && data.ProjectId != input.ProjectId)
+        if ((input.ProjectId is not null && data.ProjectId != input.ProjectId) ||
+        (input.UserId is not null && data.UserId != input.UserId) ||
+        (input.ClientUserId is not null && data.ClientUserId != input.ClientUserId) ||
+        (input.OrderId is not null && data.Id != input.OrderId) ||
+        (input.Status is not null && data.Status.ToString() != input.Status))
+        {
             return Task.FromResult(GetPreflightResponse<OrderChangedPayload>());
-
-        if (input.UserId is not null && data.UserId != input.UserId)
-            return Task.FromResult(GetPreflightResponse<OrderChangedPayload>());
-
-        if (input.ClientUserId is not null && data.ClientUserId != input.ClientUserId)
-            return Task.FromResult(GetPreflightResponse<OrderChangedPayload>());
-
-        if (input.OrderId is not null && data.Id != input.OrderId)
-            return Task.FromResult(GetPreflightResponse<OrderChangedPayload>());
-
+        }
         return Task.FromResult(new WebhookResponse<OrderChangedPayload>()
         {
             HttpResponseMessage = new(HttpStatusCode.OK),
@@ -136,11 +133,12 @@ public class WebhookList
     {
         var data = HandleCallback<JobStatusChangedPayload>(request);
 
-        if (input.JobId is not null && data.JobId != input.JobId)
+        if ((input.JobId is not null && data.JobId != input.JobId)
+         || (input.UserId is not null && data.UserId != input.UserId)
+         || (input.Status is not null && data.JobStatus.ToString() != input.Status))
+        {
             return Task.FromResult(GetPreflightResponse<JobStatusChangedPayload>());
-
-        if (input.UserId is not null && data.UserId != input.UserId)
-            return Task.FromResult(GetPreflightResponse<JobStatusChangedPayload>());
+        }
 
         return Task.FromResult(new WebhookResponse<JobStatusChangedPayload>()
         {
