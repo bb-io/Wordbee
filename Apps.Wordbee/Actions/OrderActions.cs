@@ -72,11 +72,16 @@ public class OrderActions : WordbeeActions
         };
     }
 
-    [Action("Create order", Description = "Create a new order")]
+    [Action("Create order", Description = "Create a new order using .zip file")]
     public async Task<OrderEntity> CreateOrder(
         [ActionParameter] CreateOrderRequest input,
         [ActionParameter] FileModel file)
     {
+        if (!file.File.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new PluginMisconfigurationException("The provided file is not a .zip archive. Please check file format");
+        }
+
         var fileStream = await _fileManagementClient.DownloadAsync(file.File);
         var request = new WordbeeRequest("orders/create", Method.Post, Creds)
         {
