@@ -2,6 +2,7 @@ using Apps.Wordbee.Api;
 using Apps.Wordbee.Invocables;
 using Apps.Wordbee.Models.Response;
 using Apps.Wordbee.Models.Response.File;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Files;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
@@ -22,6 +23,19 @@ public class WordbeeActions : WordbeeInvocable
     protected async Task<UploadFileResponse> UploadFile(FileReference file)
     {
         var fileStream = await _fileManagementClient.DownloadAsync(file);
+
+        int firstByte = fileStream.ReadByte();
+
+        if (fileStream == null)
+        {
+            throw new PluginMisconfigurationException("Failed to download file. Please check the file source.");
+        }
+
+        if (firstByte == -1)
+        {
+            throw new PluginMisconfigurationException("The file is empty. Please check and provide a valid file.");
+        }
+        fileStream.Position = 0;
 
         var request = new WordbeeRequest("media/upload", Method.Post, Creds)
         {

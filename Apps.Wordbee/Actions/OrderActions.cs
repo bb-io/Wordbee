@@ -1,6 +1,7 @@
 using System.Net.Mime;
 using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
+using Apps.Wordbee.DataSourceHandlers;
 using Apps.Wordbee.Models;
 using Apps.Wordbee.Models.Entities;
 using Apps.Wordbee.Models.Request.Order;
@@ -8,6 +9,8 @@ using Apps.Wordbee.Models.Response;
 using Apps.Wordbee.Models.Response.Order;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
+using Blackbird.Applications.Sdk.Common.Dynamic;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using Newtonsoft.Json;
@@ -44,9 +47,14 @@ public class OrderActions : WordbeeActions
         request = new WordbeeRequest($"media/get/{response.Custom.Filetoken}", Method.Get, Creds);
         var fileResponse = await Client.ExecuteWithErrorHandling(request);
 
+        if (fileResponse.RawBytes == null || fileResponse.RawBytes.Length == 0)
+        {
+            throw new PluginMisconfigurationException("The downloaded ZIP file is empty. Please check and try again.");
+        }
+
         return new()
         {
-            File = await _fileManagementClient.UploadAsync(new MemoryStream(fileResponse.RawBytes!),
+            File = await _fileManagementClient.UploadAsync(new MemoryStream(fileResponse.RawBytes),
                 MediaTypeNames.Application.Zip, $"{order.OrderId}.zip")
         };
     }
@@ -66,11 +74,16 @@ public class OrderActions : WordbeeActions
         };
     }
 
-    [Action("Create order", Description = "Create a new order")]
+    [Action("Create order", Description = "Create a new order using .zip file")]
     public async Task<OrderEntity> CreateOrder(
         [ActionParameter] CreateOrderRequest input,
         [ActionParameter] FileModel file)
     {
+        if (!file.File.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new PluginMisconfigurationException("The provided file is not a .zip archive. Please check file format");
+        }
+
         var fileStream = await _fileManagementClient.DownloadAsync(file.File);
         var request = new WordbeeRequest("orders/create", Method.Post, Creds)
         {
