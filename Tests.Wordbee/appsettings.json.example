@@ -1,7 +1,8 @@
 {
     "ConnectionDefinition": {
-        "apiKey": "YOUR_API_KEY",
-        "url": "YOUR_URL"
+        "api_key": "",
+        "url": "",
+        "account_id": ""
     },
-    "TestFolder": "YOUR_TEST_FOLDER"
+    "TestFolder": ""
 }
