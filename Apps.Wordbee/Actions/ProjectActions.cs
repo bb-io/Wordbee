@@ -11,6 +11,7 @@ using Apps.Wordbee.Models.Response;
 using Apps.Wordbee.Models.Response.Project;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
 using RestSharp;
@@ -104,6 +105,11 @@ public class ProjectActions : WordbeeActions
         var request = new WordbeeRequest(endpoint, Method.Get, Creds);
 
         var response = await Client.ExecuteWithErrorHandling(request);
+
+        if (response.RawBytes == null || response.RawBytes.Length == 0)
+        {
+            throw new PluginApplicationException("The downloaded file is empty. Please check and try again.");
+        }
 
         return new()
         {

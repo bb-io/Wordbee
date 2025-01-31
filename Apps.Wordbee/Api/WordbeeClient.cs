@@ -1,6 +1,7 @@
 using Apps.Wordbee.Constants;
 using Apps.Wordbee.Models.Response;
 using Blackbird.Applications.Sdk.Common.Authentication;
+using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Utils.Extensions.Http;
 using Blackbird.Applications.Sdk.Utils.Extensions.Sdk;
 using Blackbird.Applications.Sdk.Utils.Extensions.String;
@@ -91,6 +92,6 @@ public class WordbeeClient : BlackBirdRestClient
     protected override Exception ConfigureErrorException(RestResponse response)
     {
         var error = JsonConvert.DeserializeObject<ErrorResponse>(response.Content!)!;
-        return new(error.Reason);
+        return new PluginApplicationException(error.Reason);
     }
 }
