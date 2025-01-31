@@ -30,7 +30,7 @@ Wordbee is a powerful, cloud-based translation management system (TMS) designed 
 
 ### Orders
 
--   **Create order** creates a new order.
+-   **Create order** creates a new order with file. Required file format `.zip`
 -   **Delete order** deletes a specific order.
 -   **Download order files** downloads all order files as a ZIP archive.
 -   **Get order** returns details of a specific order.
