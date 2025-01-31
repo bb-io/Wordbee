@@ -1,6 +1,7 @@
 using System.Net.Mime;
 using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
+using Apps.Wordbee.DataSourceHandlers;
 using Apps.Wordbee.Models;
 using Apps.Wordbee.Models.Entities;
 using Apps.Wordbee.Models.Request.Order;
@@ -8,6 +9,7 @@ using Apps.Wordbee.Models.Response;
 using Apps.Wordbee.Models.Response.Order;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
+using Blackbird.Applications.Sdk.Common.Dynamic;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
@@ -82,6 +84,21 @@ public class OrderActions : WordbeeActions
             throw new PluginMisconfigurationException("The provided file is not a .zip archive. Please check file format");
         }
 
+        var languageHandler = new GlobalLanguageDataHandler(InvocationContext);
+        var validLanguages = await languageHandler.GetDataAsync(new DataSourceContext(), CancellationToken.None);
+
+        if (!validLanguages.ContainsKey(input.SourceLanguage))
+        {
+            throw new PluginMisconfigurationException("The provided source language is not valid. Please check the language input");
+        }
+
+        foreach (var targetLanguage in input.TargetLanguages)
+        {
+            if (!validLanguages.ContainsKey(targetLanguage))
+            {
+                throw new PluginMisconfigurationException($"The target language '{targetLanguage}' is not valid. Please check the language input");
+            }
+        }
         var fileStream = await _fileManagementClient.DownloadAsync(file.File);
         var request = new WordbeeRequest("orders/create", Method.Post, Creds)
         {
