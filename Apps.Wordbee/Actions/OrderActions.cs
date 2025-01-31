@@ -84,21 +84,6 @@ public class OrderActions : WordbeeActions
             throw new PluginMisconfigurationException("The provided file is not a .zip archive. Please check file format");
         }
 
-        var languageHandler = new GlobalLanguageDataHandler(InvocationContext);
-        var validLanguages = await languageHandler.GetDataAsync(new DataSourceContext(), CancellationToken.None);
-
-        if (!validLanguages.ContainsKey(input.SourceLanguage))
-        {
-            throw new PluginMisconfigurationException("The provided source language is not valid. Please check the language input");
-        }
-
-        foreach (var targetLanguage in input.TargetLanguages)
-        {
-            if (!validLanguages.ContainsKey(targetLanguage))
-            {
-                throw new PluginMisconfigurationException($"The target language '{targetLanguage}' is not valid. Please check the language input");
-            }
-        }
         var fileStream = await _fileManagementClient.DownloadAsync(file.File);
         var request = new WordbeeRequest("orders/create", Method.Post, Creds)
         {
