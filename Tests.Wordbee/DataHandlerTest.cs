@@ -20,5 +20,19 @@ namespace Tests.Wordbee
                 Assert.IsNotNull(item);
             }
         }
+
+        [TestMethod]
+        public async Task ProjectDataSourceHandler_ReturnsValue()
+        {
+            var action = new ProjectDataSourceHandler(InvocationContext);
+
+            var response = await action.GetDataAsync(new DataSourceContext { SearchString = "" }, CancellationToken.None);
+
+            foreach (var item in response)
+            {
+                Console.WriteLine($"{item.Key} - {item.Value}");
+                Assert.IsNotNull(item);
+            }
+        }
     }
 }
