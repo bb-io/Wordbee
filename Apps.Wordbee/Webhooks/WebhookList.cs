@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Apps.Wordbee.Webhooks;
 
-[WebhookList]
+
 public class WebhookList
 {
     [Webhook("On project status changed", Description = "On status of any project changed")]
