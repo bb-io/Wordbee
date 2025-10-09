@@ -1,7 +1,6 @@
 using System.Net.Mime;
 using Apps.Wordbee.Actions.Base;
 using Apps.Wordbee.Api;
-using Apps.Wordbee.DataSourceHandlers;
 using Apps.Wordbee.Models;
 using Apps.Wordbee.Models.Entities;
 using Apps.Wordbee.Models.Request.Order;
@@ -9,7 +8,6 @@ using Apps.Wordbee.Models.Response;
 using Apps.Wordbee.Models.Response.Order;
 using Blackbird.Applications.Sdk.Common;
 using Blackbird.Applications.Sdk.Common.Actions;
-using Blackbird.Applications.Sdk.Common.Dynamic;
 using Blackbird.Applications.Sdk.Common.Exceptions;
 using Blackbird.Applications.Sdk.Common.Invocation;
 using Blackbird.Applications.SDK.Extensions.FileManagement.Interfaces;
@@ -18,14 +16,10 @@ using RestSharp;
 
 namespace Apps.Wordbee.Actions;
 
-[ActionList]
-public class OrderActions : WordbeeActions
+[ActionList("Orders")]
+public class OrderActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : 
+    WordbeeActions(invocationContext, fileManagementClient)
 {
-    public OrderActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : base(
-        invocationContext, fileManagementClient)
-    {
-    }
-
     [Action("Download order files", Description = "Download all order files as ZIP")]
     public async Task<FileEntity> DownloadOrderFiles([ActionParameter] OrderRequest order)
     {
@@ -54,7 +48,7 @@ public class OrderActions : WordbeeActions
 
         return new()
         {
-            File = await _fileManagementClient.UploadAsync(new MemoryStream(fileResponse.RawBytes),
+            File = await fileManagementClient.UploadAsync(new MemoryStream(fileResponse.RawBytes),
                 MediaTypeNames.Application.Zip, $"{order.OrderId}.zip")
         };
     }
@@ -84,7 +78,7 @@ public class OrderActions : WordbeeActions
             throw new PluginMisconfigurationException("The provided file is not a .zip archive. Please check file format");
         }
 
-        var fileStream = await _fileManagementClient.DownloadAsync(file.File);
+        var fileStream = await fileManagementClient.DownloadAsync(file.File);
         var request = new WordbeeRequest("orders/create", Method.Post, Creds)
         {
             AlwaysMultipartFormData = true
