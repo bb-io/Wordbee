@@ -58,7 +58,7 @@ public class WordbeeActions : WordbeeInvocable
             trmResponse = await Client.ExecuteWithErrorHandling<T>(request);
 
             if (trmResponse.Trm.Status == "Failed")
-                throw new(trmResponse.Trm.StatusInfo);
+                throw new(trmResponse.Trm?.StatusInfo ?? trmResponse.Trm?.Status + " " + trmResponse.Trm?.StatusText);
         } while (trmResponse.Trm.Status != "Finished");
 
         return trmResponse;
