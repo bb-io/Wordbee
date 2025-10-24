@@ -10,13 +10,9 @@ using RestSharp;
 
 namespace Apps.Wordbee.Actions;
 
-[ActionList]
-public class JobActions : WordbeeInvocable
+[ActionList("Jobs")]
+public class JobActions(InvocationContext invocationContext) : WordbeeInvocable(invocationContext)
 {
-    public JobActions(InvocationContext invocationContext) : base(invocationContext)
-    {
-    }
-
     [Action("Get job", Description = "Get details of a specific job")]
     public Task<JobEntity> GetJob([ActionParameter] JobRequest project)
     {

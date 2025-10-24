@@ -10,19 +10,11 @@ using RestSharp;
 
 namespace Apps.Wordbee.Actions.Base;
 
-public class WordbeeActions : WordbeeInvocable
+public class WordbeeActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : WordbeeInvocable(invocationContext)
 {
-    protected readonly IFileManagementClient _fileManagementClient;
-
-    public WordbeeActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : base(
-        invocationContext)
-    {
-        _fileManagementClient = fileManagementClient;
-    }
-
     protected async Task<UploadFileResponse> UploadFile(FileReference file)
     {
-        var fileStream = await _fileManagementClient.DownloadAsync(file);
+        var fileStream = await fileManagementClient.DownloadAsync(file);
 
         int firstByte = fileStream.ReadByte();
 

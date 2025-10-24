@@ -18,14 +18,10 @@ using RestSharp;
 
 namespace Apps.Wordbee.Actions;
 
-[ActionList]
-public class ProjectActions : WordbeeActions
+[ActionList("Projects")]
+public class ProjectActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : 
+    WordbeeActions(invocationContext, fileManagementClient)
 {
-    public ProjectActions(InvocationContext invocationContext, IFileManagementClient fileManagementClient) : base(
-        invocationContext, fileManagementClient)
-    {
-    }
-
     [Action("Search projects", Description = "Search for all projects in the workspace")]
     public async Task<ListProjectsResponse> SearchProjects([ActionParameter] SearchProjectsRequest input)
     {
@@ -113,7 +109,7 @@ public class ProjectActions : WordbeeActions
 
         return new()
         {
-            File = await _fileManagementClient.UploadAsync(new MemoryStream(response.RawBytes),
+            File = await fileManagementClient.UploadAsync(new MemoryStream(response.RawBytes),
                 response.ContentType ?? MediaTypeNames.Application.Octet, document.DocumentId)
         };
     }
