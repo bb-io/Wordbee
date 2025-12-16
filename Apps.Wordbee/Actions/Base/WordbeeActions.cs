@@ -41,6 +41,9 @@ public class WordbeeActions(InvocationContext invocationContext, IFileManagement
 
     protected async Task<T> GetAsyncOperationResult<T>(string requestId) where T : AsyncOperationResponse
     {
+        if (string.IsNullOrWhiteSpace(requestId))
+            throw new PluginApplicationException($"Wordbee returned empty request id. Please try again later");
+
         T trmResponse;
         do
         {
@@ -49,9 +52,30 @@ public class WordbeeActions(InvocationContext invocationContext, IFileManagement
             var request = new WordbeeRequest($"trm/status?requestid={requestId}", Method.Get, Creds);
             trmResponse = await Client.ExecuteWithErrorHandling<T>(request);
 
-            if (trmResponse.Trm.Status == "Failed")
-                throw new(trmResponse.Trm?.StatusInfo ?? trmResponse.Trm?.Status + " " + trmResponse.Trm?.StatusText);
-        } while (trmResponse.Trm.Status != "Finished");
+            if (trmResponse.Trm is null)
+            {
+                throw new PluginApplicationException("Wordbee async operation returned  null/empty response.");
+            }
+
+            if (string.Equals(trmResponse.Trm.Status, "Failed", StringComparison.OrdinalIgnoreCase))
+            {
+                var status = trmResponse.Trm.Status;
+                var statusText = trmResponse.Trm.StatusText;
+                var statusInfo = trmResponse.Trm.StatusInfo;
+
+                var message =
+                    $"Wordbee async operation failed. " +
+                    (string.IsNullOrWhiteSpace(status) ? "" : $"Status: {status}. ") +
+                    (string.IsNullOrWhiteSpace(statusText) ? "" : $"Status text: {statusText}. ") +
+                    (string.IsNullOrWhiteSpace(statusInfo) ? "" : $"Info: {statusInfo}.");
+
+                if (string.IsNullOrWhiteSpace(message))
+                    message = "Wordbee async operation failed without providing futher details. Please try again later";
+
+                throw new PluginApplicationException(message);
+            }
+
+        } while (!string.Equals(trmResponse.Trm.Status, "Finished", StringComparison.OrdinalIgnoreCase));
 
         return trmResponse;
     }
