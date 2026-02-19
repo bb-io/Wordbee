@@ -14,26 +14,32 @@ public class WordbeeActions(InvocationContext invocationContext, IFileManagement
 {
     protected async Task<UploadFileResponse> UploadFile(FileReference file)
     {
-        var fileStream = await fileManagementClient.DownloadAsync(file);
-
-        int firstByte = fileStream.ReadByte();
-
-        if (fileStream == null)
+        var originalStream = await fileManagementClient.DownloadAsync(file);
+        if (originalStream == null)
         {
             throw new PluginMisconfigurationException("Failed to download file. Please check the file source.");
         }
 
-        if (firstByte == -1)
+        var memoryStream = new MemoryStream();
+        await originalStream.CopyToAsync(memoryStream);
+
+        memoryStream.Position = 0;
+
+        if (memoryStream.Length == 0)
         {
             throw new PluginMisconfigurationException("The file is empty. Please check and provide a valid file.");
         }
-        fileStream.Position = 0;
 
         var request = new WordbeeRequest("media/upload", Method.Post, Creds)
         {
             AlwaysMultipartFormData = true
         };
-        request.AddFile("file", () => fileStream, file.Name);
+
+        request.AddFile("file", () =>
+        {
+            var s = new MemoryStream(memoryStream.ToArray());
+            return s;
+        }, file.Name);
 
         var response = await Client.ExecuteWithErrorHandling<ResultResponse<UploadFileResponse>>(request);
         return response.Result;
