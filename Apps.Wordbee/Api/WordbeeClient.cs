@@ -12,40 +12,12 @@ using RestSharp;
 
 namespace Apps.Wordbee.Api;
 
-public class WordbeeClient : BlackBirdRestClient
+public class WordbeeClient(AuthenticationCredentialsProvider[] creds) : BlackBirdRestClient(new()
+{
+    BaseUrl = creds.Get(CredsNames.Url).Value.ToUri()
+})
 {
     private const int PaginationLimit = 200;
-    private readonly AuthenticationCredentialsProvider[] _creds;
-
-    public WordbeeClient(AuthenticationCredentialsProvider[] creds) : base(new()
-    {
-        BaseUrl = creds.Get(CredsNames.Url).Value.ToUri()
-    })
-    {
-        _creds = creds;
-    }
-
-    public async Task<List<T>> Paginate<T>(RestRequest request)
-    {
-        var baseUrl = request.Resource;
-        var offset = 0;
-
-        var result = new List<T>();
-        PaginationResponse<T> response;
-        do
-        {
-            request.Resource = baseUrl
-                .SetQueryParameter("skip", offset.ToString())
-                .SetQueryParameter("take", PaginationLimit.ToString());
-
-            response = await ExecuteWithErrorHandling<PaginationResponse<T>>(request);
-            result.AddRange(response.Rows);
-
-            offset += PaginationLimit;
-        } while (response.Total > result.Count);
-
-        return result;
-    }
 
     public async Task<List<T>> Paginate<T>(RestRequest request, object payload)
     {
@@ -81,8 +53,8 @@ public class WordbeeClient : BlackBirdRestClient
         var request = new RestRequest("/auth/token", Method.Post)
             .WithJsonBody(new
             {
-                accountid = _creds.Get(CredsNames.AccountId).Value,
-                key = _creds.Get(CredsNames.ApiKey).Value,
+                accountid = creds.Get(CredsNames.AccountId).Value,
+                key = creds.Get(CredsNames.ApiKey).Value,
             });
 
         var response = await ExecuteAsync(request);
@@ -91,19 +63,38 @@ public class WordbeeClient : BlackBirdRestClient
 
     protected override Exception ConfigureErrorException(RestResponse response)
     {
-        var error = JsonConvert.DeserializeObject<ErrorResponse>(response.Content!)!;
-        return new PluginApplicationException(error.Reason);
+        string statusPart = $"Status code {response.StatusCode}.";
+        
+        if (string.IsNullOrWhiteSpace(response.Content))
+            return new PluginApplicationException($"{statusPart} Server did not return any content.");
+
+        if (response.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            try
+            {
+                var jsonError = JsonConvert.DeserializeObject<ErrorResponse>(response.Content);
+                return jsonError?.Reason != null
+                    ? new PluginApplicationException(jsonError.Reason)
+                    : new PluginApplicationException($"{statusPart} Unknown error. Raw: {response.Content}");
+            }
+            catch (JsonException)
+            {
+                return new PluginApplicationException($"{statusPart} Invalid JSON error format. Raw: {response.Content}");
+            }
+        }
+
+        string rawMessage = response.Content.Substring(0, Math.Min(response.Content.Length, 300));
+        return new PluginMisconfigurationException($"{statusPart} Raw Content: {rawMessage}");
     }
 
     public override async Task<T> ExecuteWithErrorHandling<T>(RestRequest request)
     {
-        string content = (await ExecuteWithErrorHandling(request)).Content;
-        T val = JsonConvert.DeserializeObject<T>(content, JsonSettings);
-        if (val == null)
-        {
-            throw new Exception($"Could not parse {content} to {typeof(T)}");
-        }
-
+        var response = await ExecuteWithErrorHandling(request);
+        string content = response.Content!;
+        
+        T? val = JsonConvert.DeserializeObject<T>(content, JsonSettings) ??
+                 throw new Exception($"Could not parse {content} to {typeof(T)}");
+        
         return val;
     }
 
